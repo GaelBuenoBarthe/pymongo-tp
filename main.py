@@ -1,88 +1,9 @@
-from pymongo import MongoClient
+from operations.aggregation_operation import find_author_with_books, count_books_by_category, average_price_by_category, \
+    count_books_by_year, category_with_highest_average_price, count_books_by_author
+from operations.author_operation import insert_author, update_author, delete_author
+from operations.book_operation import insert_book, update_book, delete_book, find_books_by_author, \
+    find_books_published_after, find_books_by_keyword
 
-# Configuration de la base de données
-MONGO_URI = 'mongodb://localhost:27017/'
-DATABASE_NAME = 'library'
-
-client = MongoClient(MONGO_URI)
-db = client[DATABASE_NAME]
-authors_collection = db['authors']
-books_collection = db['books']
-
-def insert_author(author):
-    authors_collection.insert_one(author)
-    print("Auteur ajouté avec succès.")
-
-def update_author(name, new_data):
-    result = authors_collection.update_one({"name": name}, {"$set": new_data})
-    if result.matched_count > 0:
-        print("Auteur mis à jour avec succès.")
-    else:
-        print("Auteur non trouvé. Veuillez réessayer.")
-
-def delete_author(name):
-    result = authors_collection.delete_one({"name": name})
-    if result.deleted_count > 0:
-        print("Auteur supprimé avec succès.")
-    else:
-        print("Auteur non trouvé. Veuillez réessayer.")
-
-def find_author_by_name(name):
-    return authors_collection.find_one({"name": name})
-
-def insert_book(book):
-    books_collection.insert_one(book)
-    print("Livre ajouté avec succès.")
-
-def update_book(title, new_data):
-    result = books_collection.update_one({"title": title}, {"$set": new_data})
-    if result.matched_count > 0:
-        print("Livre mis à jour avec succès.")
-    else:
-        print("Livre non trouvé. Veuillez réessayer.")
-
-def delete_book(title):
-    result = books_collection.delete_one({"title": title})
-    if result.deleted_count > 0:
-        print("Livre supprimé avec succès.")
-    else:
-        print("Livre non trouvé. Veuillez réessayer.")
-
-def find_books_by_author(author):
-    return books_collection.find({"author": author})
-
-def find_books_published_after(year):
-    return books_collection.find({"year": {"$gt": year}})
-
-def find_books_by_keyword(keyword):
-    return books_collection.find({"title": {"$regex": keyword, "$options": "i"}})
-
-def count_books_by_category():
-    return books_collection.aggregate([
-        {"$group": {"_id": "$category", "count": {"$sum": 1}}}
-    ])
-
-def average_price_by_category():
-    return books_collection.aggregate([
-        {"$group": {"_id": "$category", "averagePrice": {"$avg": "$price"}}}
-    ])
-
-def count_books_by_year():
-    return books_collection.aggregate([
-        {"$group": {"_id": "$year", "count": {"$sum": 1}}}
-    ])
-
-def category_with_highest_average_price():
-    return books_collection.aggregate([
-        {"$group": {"_id": "$category", "averagePrice": {"$avg": "$price"}}},
-        {"$sort": {"averagePrice": -1}},
-        {"$limit": 1}
-    ])
-
-def count_books_by_author():
-    return books_collection.aggregate([
-        {"$group": {"_id": "$author", "count": {"$sum": 1}}}
-    ])
 
 def main():
     while True:
@@ -146,8 +67,8 @@ def main():
             while True:
                 try:
                     name = input("Entrez le nom de l'auteur que vous recherchez: ")
-                    author = find_author_by_name(name)
-                    print(author)
+                    author_with_books = find_author_with_books(name)
+                    print(author_with_books)
                     break
                 except Exception as e:
                     print(f"Erreur: {e}. Veuillez réessayer.")
@@ -176,7 +97,7 @@ def main():
                         new_data["author"] = new_author
                     new_year = input("Entrez la nouvelle année (laissez vide pour passer à l'étape suivante): ")
                     if new_year:
-                        new_data["year"] = int(new_year)
+                        new_data["year"] = new_year
                     new_category = input("Entrez la nouvelle categorie (laissez vide pour passer à l'étape suivante): ")
                     if new_category:
                         new_data["category"] = new_category

@@ -48,3 +48,18 @@ def count_books_by_author():
         {"$sort": {"total_books": -1}}
     ]
     return list(books_collection.aggregate(pipeline))
+
+# Fonction pour afficher les livres ecrit par un auteur lors de son affichage
+def find_author_with_books(author_name):
+    db = get_database()
+    authors_collection = db['authors']
+    pipeline = [
+        {"$match": {"name": author_name}},
+        {"$lookup": {
+            "from": "books",
+            "localField": "name",
+            "foreignField": "author",
+            "as": "Livre écrits"
+        }}
+    ]
+    return list(authors_collection.aggregate(pipeline))
